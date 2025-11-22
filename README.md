@@ -2,30 +2,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>职场粉碎机 - 最终修正版</title>
+    <title>职场粉碎机 - v2.0 高清重制版</title>
     <style>
         :root { --btn-color-top: #00c6ff; --btn-color-bot: #0072ff; --btn-shadow: #004090; }
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
         body {
             margin: 0; background-color: #000; overflow: hidden; 
             font-family: 'Courier New', Courier, monospace;
+            /* 禁止iOS橡皮筋效果 */
+            position: fixed; width: 100%; height: 100%;
         }
+
         #app-root {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-color: #0a0a0a; z-index: 99999;
             display: flex; flex-direction: column; align-items: center;
             padding-bottom: env(safe-area-inset-bottom);
         }
+
+        /* === 游戏容器优化 === */
         #game-container {
-            position: relative; width: 94vw; max-width: 800px; height: 55vh; max-height: 500px;
-            margin-top: 10vh; box-shadow: 0 0 40px rgba(0, 198, 255, 0.1);
-            border: 2px solid #333; border-radius: 12px; background: #000;
+            position: relative; 
+            width: 94vw; 
+            max-width: 800px; 
+            /* 移除固定高度，使用 flex 弹性布局占据上半部分 */
+            flex: 1;
+            max-height: 60vh; 
+            margin-top: 8vh; 
+            box-shadow: 0 0 40px rgba(0, 198, 255, 0.1);
+            border: 2px solid #333; border-radius: 12px;
+            background: #000;
+            overflow: hidden; /* 防止溢出 */
         }
-        canvas { width: 100%; height: 100%; display: block; border-radius: 10px; }
+
+        canvas { 
+            width: 100%; height: 100%; display: block; 
+            /* 这里不需要 border-radius，容器已经有了 */
+        }
+
+        /* === 操作区优化 === */
         #controls-area {
-            flex: 1; width: 90vw; max-width: 600px; display: flex; justify-content: center; align-items: center;
-            padding-bottom: 40px; 
+            width: 90vw; max-width: 600px; 
+            height: 20vh; /* 下半部分留给按钮 */
+            min-height: 100px;
+            display: flex; justify-content: center; align-items: center;
+            padding-bottom: 20px;
         }
+
         #smash-btn {
             background: linear-gradient(180deg, var(--btn-color-top), var(--btn-color-bot)); color: white; border: none;
             border-radius: 50px; width: 100%; height: 70px; font-size: 24px; font-weight: 900;
@@ -37,31 +61,37 @@
             transform: translateY(6px); box-shadow: 0 0 0 var(--btn-shadow), 0 0 20px rgba(0, 198, 255, 0.6), inset 0 2px 5px rgba(0,0,0,0.2);
             background: linear-gradient(180deg, #0099cc, #0055cc);
         }
+
+        /* === UI 层 === */
         #ui-layer {
             position: absolute; top: 0; left: 0; right: 0; padding: 12px 18px; display: flex; justify-content: space-between;
-            pointer-events: none; z-index: 10; background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent); border-radius: 10px 10px 0 0;
+            pointer-events: none; z-index: 10; background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent);
         }
         .stat-box { text-align: center; text-shadow: 1px 1px 0 #000; }
         .stat-label { font-size: 10px; color: #888; display: block; margin-bottom: 2px; font-weight: bold;}
         .stat-value { font-size: 18px; font-weight: 900; }
         #scoreDisplay { color: #fff; font-size: 26px; }
         #hpDisplay { margin-top: 2px; font-size: 14px; letter-spacing: 2px;}
+        
         #energy-bar-container {
-            position: absolute; bottom: 0; left: 0; right: 0; height: 8px; background: #222; z-index: 15; border-top: 1px solid #555; border-radius: 0 0 10px 10px;
+            position: absolute; bottom: 0; left: 0; right: 0; height: 6px; background: #222; z-index: 15; border-top: 1px solid #555;
         }
         #energy-bar {
             width: 0%; height: 100%; background: linear-gradient(90deg, #00ffff, #0088ff);
-            box-shadow: 0 0 10px #00ffff; transition: width 0.1s linear; border-radius: 0 0 0 10px;
+            box-shadow: 0 0 10px #00ffff; transition: width 0.1s linear;
         }
         .energy-full { background: linear-gradient(90deg, #ff00ff, #ff0088) !important; box-shadow: 0 0 20px #ff00ff !important; }
+        
         #combo-display {
-            position: absolute; top: 40%; left: 50%; transform: translateX(-50%); font-size: 28px; color: #ffcc00;
-            opacity: 0; font-weight: 900; font-style: italic; pointer-events: none; text-shadow: 0 0 10px orange; transition: transform 0.1s; z-index: 5;
+            position: absolute; top: 45%; left: 50%; transform: translateX(-50%); font-size: 32px; color: #ffcc00;
+            opacity: 0; font-weight: 900; font-style: italic; pointer-events: none; text-shadow: 0 0 15px orange; transition: transform 0.1s; z-index: 5;
         }
+
+        /* 结算页 */
         #start-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10,10,10,0.96);
-            backdrop-filter: blur(8px); display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 20; text-align: center; border-radius: 10px;
+            backdrop-filter: blur(10px); display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 20; text-align: center;
         }
         .title {
             font-size: 32px; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 4px; font-weight: 900;
@@ -86,10 +116,11 @@
 <body>
     <div id="app-root">
         <div id="game-container">
-            <canvas id="gameCanvas" width="800" height="500"></canvas>
+            <canvas id="gameCanvas"></canvas>
+            
             <div id="ui-layer">
                 <div style="display:flex; gap:15px;">
-                    <div class="stat-box"><span class="stat-label">🏆 BEST</span><span id="myBestDisplay" class="stat-value">0</span></div>
+                    <div class="stat-box"><span class="stat-label">🏆 BEST</span><span id="globalBest" class="stat-value">0</span></div>
                 </div>
                 <div class="stat-box"><span id="scoreDisplay">0</span><div id="hpDisplay">❤️❤️❤️</div></div>
                 <div class="stat-box"><span class="stat-label">📊 RANK</span><span id="currentRank" class="stat-value">NO.51</span></div>
@@ -109,6 +140,38 @@
     <script>
         window.onerror = function(){return true;};
 
+        // === 核心升级：高清画布适配 ===
+        let gameWidth = 0;
+        let gameHeight = 0;
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            const container = document.getElementById('game-container');
+            // 获取容器的实际显示大小
+            const displayWidth = container.clientWidth;
+            const displayHeight = container.clientHeight;
+            
+            // 获取设备像素比 (iPhone通常是2或3)
+            const dpr = window.devicePixelRatio || 1;
+
+            // 设置 Canvas 内部 buffer 大小为 物理像素大小
+            canvas.width = displayWidth * dpr;
+            canvas.height = displayHeight * dpr;
+
+            // 缩放绘图上下文，这样我们的代码还是用逻辑像素 (CSS像素) 思考
+            ctx.scale(dpr, dpr);
+
+            // 更新全局游戏宽高变量
+            gameWidth = displayWidth;
+            gameHeight = displayHeight;
+        }
+
+        // 初始化大小并监听窗口变化
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // --- 游戏配置 ---
         const CONFIG = {
             spawnBaseInterval: 1350, spawnMinInterval: 400, feverSpawnInterval: 180, 
             energyGain: 15, energyGainElite: 40, minDrainRate: 0.01, maxDrainRate: 0.05, energyDrainAccel: 0.0015
@@ -147,35 +210,19 @@
         const RankSystem = {
             globalScores: [], personalBest: 0,
             init() {
-                // 读取本地记录，如果为空则为 0
-                const savedPB = StorageSys.getItem('office_smasher_pb_v3'); 
-                this.personalBest = savedPB ? parseInt(savedPB) : 0;
-                
+                const savedPB = StorageSys.getItem('office_smasher_pb_v3'); this.personalBest = savedPB ? parseInt(savedPB) : 0;
                 const savedGlobal = StorageSys.getItem('office_smasher_global_v3');
                 if (savedGlobal) this.globalScores = JSON.parse(savedGlobal);
                 else { this.globalScores = Array.from({length: 50}, () => Math.floor(Math.random() * 14500) + 500); this.globalScores.push(30000); this.globalScores.sort((a, b) => b - a); }
-                
                 this.updateUI();
             },
             saveScore(score) {
-                if (score > this.personalBest) { 
-                    this.personalBest = score; 
-                    StorageSys.setItem('office_smasher_pb_v3', this.personalBest); 
-                }
-                this.globalScores.push(score); 
-                this.globalScores.sort((a, b) => b - a);
-                if(this.globalScores.length > 100) this.globalScores.length = 100; 
-                StorageSys.setItem('office_smasher_global_v3', JSON.stringify(this.globalScores)); 
-                
-                this.updateUI();
+                if (score > this.personalBest) { this.personalBest = score; StorageSys.setItem('office_smasher_pb_v3', this.personalBest); }
+                this.globalScores.push(score); this.globalScores.sort((a, b) => b - a);
+                if(this.globalScores.length > 100) this.globalScores.length = 100; StorageSys.setItem('office_smasher_global_v3', JSON.stringify(this.globalScores)); this.updateUI();
             },
-            updateUI() { 
-                // 修复：BEST 永远显示你的个人最高，不被虚拟数据覆盖
-                document.getElementById('myBestDisplay').innerText = this.personalBest; 
-            },
-            getRank(currentScore) {
-                return this.globalScores.filter(s => s > currentScore).length + 1;
-            },
+            updateUI() { document.getElementById('globalBest').innerText = Math.max(this.globalScores[0]||0, this.personalBest); },
+            getRank(currentScore) { return this.globalScores.filter(s => s > currentScore).length + 1; },
             getRankData(score) {
                 if (score < 800) return { title: "🐟 摸鱼艺术家", comment: "HR: 键盘上的灰尘都比你动得快。" };
                 if (score < 2500) return { title: "☕ 饮水机守护神", comment: "HR: 只要我不努力，老板就过不上好日子。" };
@@ -187,12 +234,17 @@
             }
         };
 
-        const canvas = document.getElementById('gameCanvas'); const ctx = canvas.getContext('2d');
         let gameState = "IDLE"; let score = 0, hp = 3, combo = 0; let lastTime = 0, spawnTimer = 0, currentTarget = null;
         let energy = 0, feverMode = false, feverDrainRate = 0; let particles = [], floatingTexts = [], matrixColumns = [];
         let shakeIntensity = 0, screenFlash = 0; const TARGET_TYPES = { BUG: 1, COFFEE: 2, ELITE: 3 };
 
-        function initMatrix() { matrixColumns = []; const cols = Math.floor(canvas.width / 20); for(let i=0; i<cols; i++) matrixColumns.push({x: i*20, y: Math.random()*canvas.height, s: Math.random()*2+1}); }
+        // 动态矩阵初始化，适应屏幕变化
+        function initMatrix() { 
+            matrixColumns = []; 
+            const cols = Math.floor(gameWidth / 20); 
+            for(let i=0; i<cols; i++) matrixColumns.push({x: i*20, y: Math.random()*gameHeight, s: Math.random()*2+1}); 
+        }
+
         function createPolygon(x, y, size, color, sides) {
             if(!sides) sides = Math.floor(Math.random()*3)+4; const pts = [];
             for(let i=0; i<sides; i++) { const a = (i/sides)*Math.PI*2; const r = size * (0.6 + Math.random()*0.4); pts.push({x: x+Math.cos(a)*r, y: y+Math.sin(a)*r}); }
@@ -212,7 +264,7 @@
             else { currentTarget.displayTimer -= dt; if(currentTarget.shape) currentTarget.shape.r += currentTarget.shape.rs; if (currentTarget.scale < 1) currentTarget.scale += 0.1; if (currentTarget.displayTimer <= 0) { if (currentTarget.type !== TARGET_TYPES.COFFEE) { takeDamage(1); resetComboAndEnergy(); createFloatingText("MISS", currentTarget.shape.x, currentTarget.shape.y, "#888"); } currentTarget = null; } }
             particles.forEach((p,i) => { p.x+=p.vx; p.y+=p.vy; p.life-=0.03; if(p.life<=0) particles.splice(i,1); });
             floatingTexts.forEach((t,i) => { t.y+=t.vy; t.life-=0.02; if(t.life<=0) floatingTexts.splice(i,1); });
-            matrixColumns.forEach(c => { c.y += c.s * (feverMode ? 8 : 2); if(c.y > canvas.height) c.y = -20; });
+            matrixColumns.forEach(c => { c.y += c.s * (feverMode ? 8 : 2); if(c.y > gameHeight) c.y = -20; });
             if(shakeIntensity>0) shakeIntensity *= 0.9; if(screenFlash>0) screenFlash -= 0.1;
         }
         function spawnTarget() {
@@ -223,7 +275,12 @@
                 else if (score < 5000) { if (rand < 0.05) type = TARGET_TYPES.ELITE; else if (rand < 0.25) type = TARGET_TYPES.COFFEE; else type = TARGET_TYPES.BUG; } 
                 else { if (rand < 0.15) type = TARGET_TYPES.ELITE; else if (rand < 0.45) type = TARGET_TYPES.COFFEE; else type = TARGET_TYPES.BUG; }
             }
-            const pad = 100; const x = Math.random()*(canvas.width-pad*2)+pad; const y = Math.random()*(canvas.height-pad*2)+pad; let shape, hp=1, duration=1000;
+            // 动态坐标：使用 gameWidth/Height 而不是固定值
+            const pad = 80; 
+            const x = Math.random()*(gameWidth-pad*2)+pad; 
+            const y = Math.random()*(gameHeight-pad*2)+pad; 
+            
+            let shape, hp=1, duration=1000;
             if (type === TARGET_TYPES.ELITE) { shape = createPolygon(x, y, 70, '#bf00ff', 8); hp = 3; duration = 2000; } 
             else if (type === TARGET_TYPES.COFFEE) { shape = createPolygon(x, y, 45, '#44ff44', 5); duration = 1300; } 
             else { shape = createPolygon(x, y, 50, feverMode?'#00ffff':'#ff4444'); duration = Math.max(600, 1100 - score/5); }
@@ -241,7 +298,7 @@
             updateGameUI();
         }
         function handleInput() {
-            if (!currentTarget) { score = Math.max(0, score - 20); resetComboAndEnergy(); createFloatingText("-20", canvas.width/2, canvas.height/2, "#888"); updateGameUI(); return; }
+            if (!currentTarget) { score = Math.max(0, score - 20); resetComboAndEnergy(); createFloatingText("-20", gameWidth/2, gameHeight/2, "#888"); updateGameUI(); return; }
             if (currentTarget.type === TARGET_TYPES.COFFEE) { takeDamage(1); resetComboAndEnergy(); createFloatingText("NO!", currentTarget.shape.x, currentTarget.shape.y, "#44ff44"); currentTarget = null; } 
             else {
                 currentTarget.hp--;
@@ -256,16 +313,17 @@
             document.getElementById('currentRank').innerText = "NO." + currentRank;
         }
 
-        function startFever() { feverMode = true; energy = 100; feverDrainRate = CONFIG.minDrainRate; AudioSys.playSFX('fever_start'); document.getElementById('game-container').classList.add('fever-border'); document.getElementById('energy-bar').classList.add('energy-full'); createFloatingText("⚡ OVERLOAD ⚡", canvas.width/2, canvas.height/2, "#ff00ff", 40); }
-        function endFever() { feverMode = false; energy = 0; document.getElementById('game-container').classList.remove('fever-border'); document.getElementById('energy-bar').classList.remove('energy-full'); createFloatingText("COOLDOWN", canvas.width/2, canvas.height/2, "#888", 30); }
+        function startFever() { feverMode = true; energy = 100; feverDrainRate = CONFIG.minDrainRate; AudioSys.playSFX('fever_start'); document.getElementById('game-container').classList.add('fever-border'); document.getElementById('energy-bar').classList.add('energy-full'); createFloatingText("⚡ OVERLOAD ⚡", gameWidth/2, gameHeight/2, "#ff00ff", 40); }
+        function endFever() { feverMode = false; energy = 0; document.getElementById('game-container').classList.remove('fever-border'); document.getElementById('energy-bar').classList.remove('energy-full'); createFloatingText("COOLDOWN", gameWidth/2, gameHeight/2, "#888", 30); }
         function resetComboAndEnergy() { combo = 0; document.getElementById('combo-display').style.opacity = 0; if (feverMode) energy -= 30; else energy = Math.max(0, energy - 30); }
         function updateEnergyBar() { document.getElementById('energy-bar').style.width = `${Math.max(0, Math.min(100, energy))}%`; }
         function createExplosion(x, y, color, n) { for(let i=0; i<n; i++) particles.push({x, y, vx:(Math.random()-0.5)*15, vy:(Math.random()-0.5)*15, life:1, color, size:Math.random()*5+2}); }
         function createFloatingText(txt, x, y, c, s=24) { floatingTexts.push({text:txt, x, y, color:c, size:s, life:1, vy:-3}); }
         function takeDamage(amt) { hp -= amt; shakeIntensity = 30; AudioSys.playSFX('hit', -5); document.getElementById('hpDisplay').innerText = "❤️".repeat(Math.max(0, hp)); if(hp<=0) gameOver(); }
+        
         function draw() {
             ctx.save(); let dx = (Math.random()-0.5)*shakeIntensity, dy = (Math.random()-0.5)*shakeIntensity; ctx.translate(dx, dy);
-            ctx.fillStyle = '#050505'; ctx.fillRect(-dx, -dy, canvas.width, canvas.height);
+            ctx.fillStyle = '#050505'; ctx.fillRect(-dx, -dy, gameWidth, gameHeight);
             ctx.fillStyle = feverMode?'rgba(255,0,255,0.1)':'rgba(0,255,0,0.05)'; ctx.font = '14px monospace';
             matrixColumns.forEach(c=>ctx.fillText(String.fromCharCode(0x30A0+Math.random()*96), c.x, c.y));
             if(currentTarget) {
@@ -279,7 +337,7 @@
             }
             particles.forEach(p=>{ ctx.fillStyle=p.color; ctx.globalAlpha=p.life; ctx.fillRect(p.x, p.y, p.size, p.size); });
             floatingTexts.forEach(t=>{ ctx.globalAlpha=Math.max(0,t.life); ctx.fillStyle=t.color; ctx.font=`bold ${t.size}px Arial`; ctx.fillText(t.text, t.x, t.y); });
-            if(screenFlash>0) { ctx.fillStyle=`rgba(255,255,255,${screenFlash})`; ctx.fillRect(0,0,canvas.width,canvas.height); }
+            if(screenFlash>0) { ctx.fillStyle=`rgba(255,255,255,${screenFlash})`; ctx.fillRect(0,0,gameWidth,gameHeight); }
             ctx.restore();
         }
 
@@ -287,7 +345,7 @@
             const screen = document.getElementById('start-screen'); screen.style.display = 'flex';
             screen.innerHTML = `
                 <div class="title">职场粉碎机</div>
-                <div style="color:#00ffff; font-size:14px; letter-spacing:2px; margin-bottom:10px;">v1.9.2 修正版</div>
+                <div style="color:#00ffff; font-size:14px; letter-spacing:2px; margin-bottom:10px;">v2.0 高清重制版</div>
                 <div class="tutorial-box">
                     <p>🟣 精英怪: 坚硬, 连按 <span class="key-highlight">3次</span></p>
                     <p>⚡ 能量条: 满条进入 <span style="color:#ff00ff"><b>暴走</b></span></p>
@@ -305,7 +363,11 @@
         document.addEventListener('touchstart', e=>{ if(e.target.tagName==='CANVAS') {e.preventDefault(); triggerAction();} }, {passive:false});
 
         function startGame() {
-            initMatrix(); RankSystem.init(); gameState = "PLAYING"; score=0; hp=3; combo=0; energy=0; feverMode=false;
+            // 每次开始游戏前，重新初始化矩阵和画布，确保尺寸正确
+            resizeCanvas();
+            initMatrix(); 
+            RankSystem.init(); 
+            gameState = "PLAYING"; score=0; hp=3; combo=0; energy=0; feverMode=false;
             particles=[]; floatingTexts=[]; currentTarget=null; lastTime=performance.now();
             document.getElementById('start-screen').style.display='none'; document.getElementById('game-container').classList.remove('fever-border');
             updateGameUI(); document.getElementById('hpDisplay').innerText='❤️❤️❤️';
