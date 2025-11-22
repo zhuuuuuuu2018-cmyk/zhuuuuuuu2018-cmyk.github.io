@@ -2,52 +2,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>职场粉碎机</title>
+    <title>职场粉碎机 - 最终修正版</title>
     <style>
-        /* === 1. 全局重置与霸屏设置 === */
         :root { --btn-color-top: #00c6ff; --btn-color-bot: #0072ff; --btn-shadow: #004090; }
-        
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
         body {
             margin: 0; background-color: #000; overflow: hidden; 
             font-family: 'Courier New', Courier, monospace;
         }
-
-        /* 核心修复：创建一个覆盖全屏的容器，盖住 GitHub 的默认标题 */
         #app-root {
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh;
-            background-color: #0a0a0a;
-            z-index: 99999; /* 层级极高，覆盖一切干扰 */
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh;
+            background-color: #0a0a0a; z-index: 99999;
             display: flex; flex-direction: column; align-items: center;
-            padding-bottom: env(safe-area-inset-bottom); /* 适配 iPhone 底部 */
+            padding-bottom: env(safe-area-inset-bottom);
         }
-
-        /* === 2. 游戏容器优化 === */
         #game-container {
-            position: relative;
-            width: 94vw; max-width: 800px;
-            /* 调整高度比例，给底部按钮留出更多空间 */
-            height: 55vh; max-height: 500px;
-            margin-top: 10vh; /* 顶部留白，视觉平衡 */
-            box-shadow: 0 0 40px rgba(0, 198, 255, 0.1);
-            border: 2px solid #333; border-radius: 12px;
-            background: #000;
+            position: relative; width: 94vw; max-width: 800px; height: 55vh; max-height: 500px;
+            margin-top: 10vh; box-shadow: 0 0 40px rgba(0, 198, 255, 0.1);
+            border: 2px solid #333; border-radius: 12px; background: #000;
         }
-
         canvas { width: 100%; height: 100%; display: block; border-radius: 10px; }
-
-        /* === 3. 按钮区域优化 === */
         #controls-area {
-            /* 使用 flex 填充剩余空间，确保按钮在下方居中 */
-            flex: 1;
-            width: 90vw; max-width: 600px;
-            display: flex; justify-content: center; align-items: center;
-            /* 增加底部边距，防止被浏览器工具栏遮挡 */
+            flex: 1; width: 90vw; max-width: 600px; display: flex; justify-content: center; align-items: center;
             padding-bottom: 40px; 
         }
-
         #smash-btn {
             background: linear-gradient(180deg, var(--btn-color-top), var(--btn-color-bot)); color: white; border: none;
             border-radius: 50px; width: 100%; height: 70px; font-size: 24px; font-weight: 900;
@@ -59,8 +37,6 @@
             transform: translateY(6px); box-shadow: 0 0 0 var(--btn-shadow), 0 0 20px rgba(0, 198, 255, 0.6), inset 0 2px 5px rgba(0,0,0,0.2);
             background: linear-gradient(180deg, #0099cc, #0055cc);
         }
-
-        /* === 4. UI 细节 === */
         #ui-layer {
             position: absolute; top: 0; left: 0; right: 0; padding: 12px 18px; display: flex; justify-content: space-between;
             pointer-events: none; z-index: 10; background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent); border-radius: 10px 10px 0 0;
@@ -70,7 +46,6 @@
         .stat-value { font-size: 18px; font-weight: 900; }
         #scoreDisplay { color: #fff; font-size: 26px; }
         #hpDisplay { margin-top: 2px; font-size: 14px; letter-spacing: 2px;}
-        
         #energy-bar-container {
             position: absolute; bottom: 0; left: 0; right: 0; height: 8px; background: #222; z-index: 15; border-top: 1px solid #555; border-radius: 0 0 10px 10px;
         }
@@ -79,13 +54,10 @@
             box-shadow: 0 0 10px #00ffff; transition: width 0.1s linear; border-radius: 0 0 0 10px;
         }
         .energy-full { background: linear-gradient(90deg, #ff00ff, #ff0088) !important; box-shadow: 0 0 20px #ff00ff !important; }
-        
         #combo-display {
             position: absolute; top: 40%; left: 50%; transform: translateX(-50%); font-size: 28px; color: #ffcc00;
             opacity: 0; font-weight: 900; font-style: italic; pointer-events: none; text-shadow: 0 0 10px orange; transition: transform 0.1s; z-index: 5;
         }
-
-        /* 结算页 */
         #start-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10,10,10,0.96);
             backdrop-filter: blur(8px); display: flex; flex-direction: column; justify-content: center; align-items: center;
@@ -109,14 +81,6 @@
         .blink { animation: blinker 1s step-end infinite; }
         @keyframes blinker { 50% { opacity: 0; } }
         .fever-border { border-color: #ff00ff !important; box-shadow: 0 0 60px rgba(255, 0, 255, 0.5) !important; }
-        
-        /* AI演示标记 */
-        #demo-tag {
-            position: absolute; bottom: 10px; right: 10px; color: #00ffff; font-weight: bold; 
-            font-size: 12px; animation: pulse 2s infinite; text-shadow: 0 0 5px #00ffff; z-index: 50;
-            background: rgba(0,0,0,0.6); padding: 4px 8px; border-radius: 4px; border: 1px solid rgba(0,255,255,0.3);
-        }
-        @keyframes pulse { 0%{opacity:0.6;} 50%{opacity:1;} 100%{opacity:0.6;} }
     </style>
 </head>
 <body>
@@ -125,15 +89,15 @@
             <canvas id="gameCanvas" width="800" height="500"></canvas>
             <div id="ui-layer">
                 <div style="display:flex; gap:15px;">
-                    <div class="stat-box"><span class="stat-label">🏆 BEST</span><span id="globalBest" class="stat-value">0</span></div>
+                    <div class="stat-box"><span class="stat-label">🏆 BEST</span><span id="myBestDisplay" class="stat-value">0</span></div>
                 </div>
                 <div class="stat-box"><span id="scoreDisplay">0</span><div id="hpDisplay">❤️❤️❤️</div></div>
-                <div class="stat-box"><span class="stat-label">📊 RANK</span><span id="currentRank" class="stat-value">-</span></div>
+                <div class="stat-box"><span class="stat-label">📊 RANK</span><span id="currentRank" class="stat-value">NO.51</span></div>
             </div>
             <div id="energy-bar-container"><div id="energy-bar"></div></div>
             <div id="combo-display">COMBO x0</div>
             <div id="start-screen"></div>
-            </div>
+        </div>
 
         <div id="controls-area">
             <button id="smash-btn" onmousedown="btnPress(event)" onmouseup="btnRelease(event)" ontouchstart="btnPress(event)" ontouchend="btnRelease(event)">
@@ -143,7 +107,6 @@
     </div>
     
     <script>
-        // 错误屏蔽
         window.onerror = function(){return true;};
 
         const CONFIG = {
@@ -184,20 +147,37 @@
         const RankSystem = {
             globalScores: [], personalBest: 0,
             init() {
-                const savedPB = StorageSys.getItem('office_smasher_pb_v3'); this.personalBest = savedPB ? parseInt(savedPB) : 0;
+                // 读取本地记录，如果为空则为 0
+                const savedPB = StorageSys.getItem('office_smasher_pb_v3'); 
+                this.personalBest = savedPB ? parseInt(savedPB) : 0;
+                
                 const savedGlobal = StorageSys.getItem('office_smasher_global_v3');
                 if (savedGlobal) this.globalScores = JSON.parse(savedGlobal);
                 else { this.globalScores = Array.from({length: 50}, () => Math.floor(Math.random() * 14500) + 500); this.globalScores.push(30000); this.globalScores.sort((a, b) => b - a); }
+                
                 this.updateUI();
             },
             saveScore(score) {
-                if (score > this.personalBest) { this.personalBest = score; StorageSys.setItem('office_smasher_pb_v3', this.personalBest); }
-                this.globalScores.push(score); this.globalScores.sort((a, b) => b - a);
-                if(this.globalScores.length > 100) this.globalScores.length = 100; StorageSys.setItem('office_smasher_global_v3', JSON.stringify(this.globalScores)); this.updateUI();
+                if (score > this.personalBest) { 
+                    this.personalBest = score; 
+                    StorageSys.setItem('office_smasher_pb_v3', this.personalBest); 
+                }
+                this.globalScores.push(score); 
+                this.globalScores.sort((a, b) => b - a);
+                if(this.globalScores.length > 100) this.globalScores.length = 100; 
+                StorageSys.setItem('office_smasher_global_v3', JSON.stringify(this.globalScores)); 
+                
+                this.updateUI();
             },
-            updateUI() { document.getElementById('globalBest').innerText = Math.max(this.globalScores[0]||0, this.personalBest); },
+            updateUI() { 
+                // 修复：BEST 永远显示你的个人最高，不被虚拟数据覆盖
+                document.getElementById('myBestDisplay').innerText = this.personalBest; 
+            },
+            getRank(currentScore) {
+                return this.globalScores.filter(s => s > currentScore).length + 1;
+            },
             getRankData(score) {
-                if (score < 800) return { title: "🐟 摸鱼艺术家", comment: "HR: 键盘上的最大都比你动得快。" };
+                if (score < 800) return { title: "🐟 摸鱼艺术家", comment: "HR: 键盘上的灰尘都比你动得快。" };
                 if (score < 2500) return { title: "☕ 饮水机守护神", comment: "HR: 只要我不努力，老板就过不上好日子。" };
                 if (score < 5500) return { title: "🔨 合格工具人", comment: "HR: 你的努力，老板看在眼里（大概）。" };
                 if (score < 10000) return { title: "💇‍♂️ 秃头预备役", comment: "HR: 变强了，也变秃了。值得吗？" };
@@ -258,9 +238,10 @@
             createFloatingText(feverMode?"SMASH!":"+"+points, currentTarget.shape.x, currentTarget.shape.y, "#fff");
             const comboEl = document.getElementById('combo-display'); comboEl.innerText = `COMBO x${combo}`; comboEl.style.opacity = 1; comboEl.style.transform = "translateX(-50%) scale(1.3)"; setTimeout(()=>comboEl.style.transform = "translateX(-50%) scale(1)", 100);
             currentTarget = null; spawnTimer = feverMode ? 80 : 150; 
+            updateGameUI();
         }
         function handleInput() {
-            if (!currentTarget) { score = Math.max(0, score - 20); resetComboAndEnergy(); createFloatingText("-20", canvas.width/2, canvas.height/2, "#888"); return; }
+            if (!currentTarget) { score = Math.max(0, score - 20); resetComboAndEnergy(); createFloatingText("-20", canvas.width/2, canvas.height/2, "#888"); updateGameUI(); return; }
             if (currentTarget.type === TARGET_TYPES.COFFEE) { takeDamage(1); resetComboAndEnergy(); createFloatingText("NO!", currentTarget.shape.x, currentTarget.shape.y, "#44ff44"); currentTarget = null; } 
             else {
                 currentTarget.hp--;
@@ -268,6 +249,13 @@
                 else { shakeIntensity = 10; AudioSys.playSFX('elite'); currentTarget.shape.color = '#fff'; setTimeout(()=>currentTarget?currentTarget.shape.color='#bf00ff':null, 50); createFloatingText("HIT", currentTarget.shape.x, currentTarget.shape.y, "#fff", 16); }
             }
         }
+        
+        function updateGameUI() {
+            document.getElementById('scoreDisplay').innerText = score;
+            const currentRank = RankSystem.getRank(score);
+            document.getElementById('currentRank').innerText = "NO." + currentRank;
+        }
+
         function startFever() { feverMode = true; energy = 100; feverDrainRate = CONFIG.minDrainRate; AudioSys.playSFX('fever_start'); document.getElementById('game-container').classList.add('fever-border'); document.getElementById('energy-bar').classList.add('energy-full'); createFloatingText("⚡ OVERLOAD ⚡", canvas.width/2, canvas.height/2, "#ff00ff", 40); }
         function endFever() { feverMode = false; energy = 0; document.getElementById('game-container').classList.remove('fever-border'); document.getElementById('energy-bar').classList.remove('energy-full'); createFloatingText("COOLDOWN", canvas.width/2, canvas.height/2, "#888", 30); }
         function resetComboAndEnergy() { combo = 0; document.getElementById('combo-display').style.opacity = 0; if (feverMode) energy -= 30; else energy = Math.max(0, energy - 30); }
@@ -299,7 +287,7 @@
             const screen = document.getElementById('start-screen'); screen.style.display = 'flex';
             screen.innerHTML = `
                 <div class="title">职场粉碎机</div>
-                <div style="color:#00ffff; font-size:14px; letter-spacing:2px; margin-bottom:10px;">v1.9 霸屏修复版</div>
+                <div style="color:#00ffff; font-size:14px; letter-spacing:2px; margin-bottom:10px;">v1.9.2 修正版</div>
                 <div class="tutorial-box">
                     <p>🟣 精英怪: 坚硬, 连按 <span class="key-highlight">3次</span></p>
                     <p>⚡ 能量条: 满条进入 <span style="color:#ff00ff"><b>暴走</b></span></p>
@@ -320,7 +308,7 @@
             initMatrix(); RankSystem.init(); gameState = "PLAYING"; score=0; hp=3; combo=0; energy=0; feverMode=false;
             particles=[]; floatingTexts=[]; currentTarget=null; lastTime=performance.now();
             document.getElementById('start-screen').style.display='none'; document.getElementById('game-container').classList.remove('fever-border');
-            document.getElementById('scoreDisplay').innerText='0'; document.getElementById('hpDisplay').innerText='❤️❤️❤️';
+            updateGameUI(); document.getElementById('hpDisplay').innerText='❤️❤️❤️';
             requestAnimationFrame(gameLoop);
         }
 
