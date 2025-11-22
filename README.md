@@ -1,31 +1,55 @@
-# zhuuuuuuu2018-cmyk.github.io
-<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>职场粉碎机 - 内测版</title>
+    <title>职场粉碎机 - 修复版</title>
     <style>
         :root { --btn-color-top: #00c6ff; --btn-color-bot: #0072ff; --btn-shadow: #004090; }
+        
+        /* 强制重置所有默认样式，防止 GitHub Pages 主题干扰 */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         body {
-            margin: 0; background-color: #0a0a0a; color: #f0f0f0; font-family: 'Courier New', Courier, monospace;
-            display: flex; flex-direction: column; align-items: center; height: 100vh; height: 100dvh;
+            margin: 0; background-color: #0a0a0a !important; color: #f0f0f0; 
+            font-family: 'Courier New', Courier, monospace;
+            /* 强制全屏固定，防止滚动 */
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             overflow: hidden; user-select: none; -webkit-user-select: none; touch-action: none;
-            padding-bottom: env(safe-area-inset-bottom);
+            z-index: 9999; /* 层级最高，覆盖一切 */
         }
+
         #game-container {
-            position: relative; width: 94vw; max-width: 800px; aspect-ratio: 16/10;
-            box-shadow: 0 0 40px rgba(0, 198, 255, 0.1); border: 2px solid #333; border-radius: 12px;
-            background: #000; margin-top: 2vh;
+            position: relative; 
+            width: 94vw; 
+            max-width: 800px; 
+            /* 调整比例，留出更多底部空间给按钮 */
+            height: 55vh; 
+            max-height: 600px;
+            box-shadow: 0 0 40px rgba(0, 198, 255, 0.1); 
+            border: 2px solid #333; 
+            border-radius: 12px;
+            background: #000; 
+            margin: 5vh auto 0 auto; /* 顶部留白，居中 */
         }
+
         canvas { width: 100%; height: 100%; display: block; border-radius: 10px; }
+
+        /* 操作区 - 绝对定位到底部，适配各种屏幕 */
         #controls-area {
-            width: 94vw; max-width: 800px; flex: 1; display: flex; justify-content: center; align-items: center;
-            min-height: 100px; max-height: 180px;
+            position: absolute;
+            bottom: 5vh; /* 距离底部 5% 的高度 */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90vw;
+            max-width: 600px;
+            height: 80px;
+            padding-bottom: env(safe-area-inset-bottom); /* 适配 iPhone 底部黑条 */
+            z-index: 10000;
         }
+
         #smash-btn {
             background: linear-gradient(180deg, var(--btn-color-top), var(--btn-color-bot)); color: white; border: none;
-            border-radius: 16px; width: 100%; height: 70%; max-height: 80px; font-size: 24px; font-weight: 900;
+            border-radius: 16px; width: 100%; height: 100%; font-size: 24px; font-weight: 900;
             letter-spacing: 4px; text-shadow: 0 2px 0 rgba(0,0,0,0.2);
             box-shadow: 0 6px 0 var(--btn-shadow), 0 15px 20px rgba(0, 114, 255, 0.3), inset 0 1px 0 rgba(255,255,255,0.4);
             transition: all 0.05s; cursor: pointer; -webkit-tap-highlight-color: transparent;
@@ -35,6 +59,8 @@
             transform: translateY(6px); box-shadow: 0 0 0 var(--btn-shadow), 0 0 20px rgba(0, 198, 255, 0.6), inset 0 2px 5px rgba(0,0,0,0.2);
             background: linear-gradient(180deg, #0099cc, #0055cc);
         }
+
+        /* UI 层 */
         #ui-layer {
             position: absolute; top: 0; left: 0; right: 0; padding: 12px 18px; display: flex; justify-content: space-between;
             pointer-events: none; z-index: 10; background: linear-gradient(to bottom, rgba(0,0,0,0.85), transparent); border-radius: 10px 10px 0 0;
@@ -44,6 +70,7 @@
         .stat-value { font-size: 18px; font-weight: 900; }
         #scoreDisplay { color: #fff; font-size: 26px; }
         #hpDisplay { margin-top: 2px; font-size: 14px; letter-spacing: 2px;}
+        
         #energy-bar-container {
             position: absolute; bottom: 0; left: 0; right: 0; height: 8px; background: #222; z-index: 15; border-top: 1px solid #555; border-radius: 0 0 10px 10px;
         }
@@ -52,13 +79,16 @@
             box-shadow: 0 0 10px #00ffff; transition: width 0.1s linear; border-radius: 0 0 0 10px;
         }
         .energy-full { background: linear-gradient(90deg, #ff00ff, #ff0088) !important; box-shadow: 0 0 20px #ff00ff !important; }
+        
         #combo-display {
             position: absolute; top: 40%; left: 50%; transform: translateX(-50%); font-size: 28px; color: #ffcc00;
             opacity: 0; font-weight: 900; font-style: italic; pointer-events: none; text-shadow: 0 0 10px orange; transition: transform 0.1s; z-index: 5;
         }
+
+        /* 结算页优化 */
         #start-screen {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10,10,10,0.94);
-            backdrop-filter: blur(6px); display: flex; flex-direction: column; justify-content: center; align-items: center;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10,10,10,0.96);
+            backdrop-filter: blur(8px); display: flex; flex-direction: column; justify-content: center; align-items: center;
             z-index: 20; text-align: center; border-radius: 10px;
         }
         .title {
@@ -70,21 +100,18 @@
             border: 1px solid rgba(255,215,0,0.3); border-radius: 8px;
             color: #ffd700; background: rgba(255,215,0,0.1); text-shadow: 0 0 10px rgba(255,215,0,0.5);
         }
-        .hr-comment { font-size: 13px; color: #aaa; font-style: italic; margin-bottom: 20px; width: 80%; }
+        .hr-comment { font-size: 13px; color: #aaa; font-style: italic; margin-bottom: 15px; width: 80%; }
         .tutorial-box {
             background: rgba(255, 255, 255, 0.05); border: 1px solid #333; padding: 15px; border-radius: 8px;
-            margin: 5px 0; line-height: 1.6; font-size: 13px; color: #aaa; text-align: left; width: 85%;
+            margin: 5px 0; line-height: 1.6; font-size: 13px; color: #aaa; text-align: left; width: 90%;
         }
         .key-highlight { background: #333; color: #fff; padding: 1px 6px; border-radius: 3px; font-weight: bold; font-size: 12px; border: 1px solid #555;}
         .blink { animation: blinker 1s step-end infinite; }
         @keyframes blinker { 50% { opacity: 0; } }
         .fever-border { border-color: #ff00ff !important; box-shadow: 0 0 60px rgba(255, 0, 255, 0.5) !important; }
-        /* 错误日志，仅开发可见 */
-        #error-log { display:none; position:fixed; top:0; left:0; background:red; color:white; z-index:999; font-size:10px;}
     </style>
 </head>
 <body>
-    <div id="error-log"></div>
     <div id="game-container">
         <canvas id="gameCanvas" width="800" height="500"></canvas>
         <div id="ui-layer">
@@ -106,24 +133,17 @@
     </div>
     
     <script>
-        // 全局错误捕获，防止手机端静默失败
-        window.onerror = function(msg, url, line) {
-            // console.error(msg); // 生产环境不显示红框，只在控制台
-        };
+        // 错误屏蔽
+        window.onerror = function(){return true;};
 
         const CONFIG = {
             spawnBaseInterval: 1350, spawnMinInterval: 400, feverSpawnInterval: 180, 
             energyGain: 15, energyGainElite: 40, minDrainRate: 0.01, maxDrainRate: 0.05, energyDrainAccel: 0.0015
         };
 
-        // 安全的存储系统 (修复 iOS 无痕模式崩溃问题)
         const StorageSys = {
-            getItem(key) {
-                try { return localStorage.getItem(key); } catch(e) { return null; }
-            },
-            setItem(key, val) {
-                try { localStorage.setItem(key, val); } catch(e) { console.warn('Storage failed'); }
-            }
+            getItem(key) { try { return localStorage.getItem(key); } catch(e) { return null; } },
+            setItem(key, val) { try { localStorage.setItem(key, val); } catch(e) {} }
         };
 
         const AudioSys = {
