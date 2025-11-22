@@ -1,68 +1,69 @@
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>职场粉碎机 - 修复版</title>
+    <title>职场粉碎机</title>
     <style>
+        /* === 1. 全局重置与霸屏设置 === */
         :root { --btn-color-top: #00c6ff; --btn-color-bot: #0072ff; --btn-shadow: #004090; }
         
-        /* 强制重置所有默认样式，防止 GitHub Pages 主题干扰 */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
         body {
-            margin: 0; background-color: #0a0a0a !important; color: #f0f0f0; 
+            margin: 0; background-color: #000; overflow: hidden; 
             font-family: 'Courier New', Courier, monospace;
-            /* 强制全屏固定，防止滚动 */
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            overflow: hidden; user-select: none; -webkit-user-select: none; touch-action: none;
-            z-index: 9999; /* 层级最高，覆盖一切 */
         }
 
+        /* 核心修复：创建一个覆盖全屏的容器，盖住 GitHub 的默认标题 */
+        #app-root {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh;
+            background-color: #0a0a0a;
+            z-index: 99999; /* 层级极高，覆盖一切干扰 */
+            display: flex; flex-direction: column; align-items: center;
+            padding-bottom: env(safe-area-inset-bottom); /* 适配 iPhone 底部 */
+        }
+
+        /* === 2. 游戏容器优化 === */
         #game-container {
-            position: relative; 
-            width: 94vw; 
-            max-width: 800px; 
-            /* 调整比例，留出更多底部空间给按钮 */
-            height: 55vh; 
-            max-height: 600px;
-            box-shadow: 0 0 40px rgba(0, 198, 255, 0.1); 
-            border: 2px solid #333; 
-            border-radius: 12px;
-            background: #000; 
-            margin: 5vh auto 0 auto; /* 顶部留白，居中 */
+            position: relative;
+            width: 94vw; max-width: 800px;
+            /* 调整高度比例，给底部按钮留出更多空间 */
+            height: 55vh; max-height: 500px;
+            margin-top: 10vh; /* 顶部留白，视觉平衡 */
+            box-shadow: 0 0 40px rgba(0, 198, 255, 0.1);
+            border: 2px solid #333; border-radius: 12px;
+            background: #000;
         }
 
         canvas { width: 100%; height: 100%; display: block; border-radius: 10px; }
 
-        /* 操作区 - 绝对定位到底部，适配各种屏幕 */
+        /* === 3. 按钮区域优化 === */
         #controls-area {
-            position: absolute;
-            bottom: 5vh; /* 距离底部 5% 的高度 */
-            left: 50%;
-            transform: translateX(-50%);
-            width: 90vw;
-            max-width: 600px;
-            height: 80px;
-            padding-bottom: env(safe-area-inset-bottom); /* 适配 iPhone 底部黑条 */
-            z-index: 10000;
+            /* 使用 flex 填充剩余空间，确保按钮在下方居中 */
+            flex: 1;
+            width: 90vw; max-width: 600px;
+            display: flex; justify-content: center; align-items: center;
+            /* 增加底部边距，防止被浏览器工具栏遮挡 */
+            padding-bottom: 40px; 
         }
 
         #smash-btn {
             background: linear-gradient(180deg, var(--btn-color-top), var(--btn-color-bot)); color: white; border: none;
-            border-radius: 16px; width: 100%; height: 100%; font-size: 24px; font-weight: 900;
+            border-radius: 50px; width: 100%; height: 70px; font-size: 24px; font-weight: 900;
             letter-spacing: 4px; text-shadow: 0 2px 0 rgba(0,0,0,0.2);
             box-shadow: 0 6px 0 var(--btn-shadow), 0 15px 20px rgba(0, 114, 255, 0.3), inset 0 1px 0 rgba(255,255,255,0.4);
-            transition: all 0.05s; cursor: pointer; -webkit-tap-highlight-color: transparent;
-            display: flex; align-items: center; justify-content: center; gap: 10px;
+            transition: all 0.05s; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
         }
         #smash-btn:active, .btn-active {
             transform: translateY(6px); box-shadow: 0 0 0 var(--btn-shadow), 0 0 20px rgba(0, 198, 255, 0.6), inset 0 2px 5px rgba(0,0,0,0.2);
             background: linear-gradient(180deg, #0099cc, #0055cc);
         }
 
-        /* UI 层 */
+        /* === 4. UI 细节 === */
         #ui-layer {
             position: absolute; top: 0; left: 0; right: 0; padding: 12px 18px; display: flex; justify-content: space-between;
-            pointer-events: none; z-index: 10; background: linear-gradient(to bottom, rgba(0,0,0,0.85), transparent); border-radius: 10px 10px 0 0;
+            pointer-events: none; z-index: 10; background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent); border-radius: 10px 10px 0 0;
         }
         .stat-box { text-align: center; text-shadow: 1px 1px 0 #000; }
         .stat-label { font-size: 10px; color: #888; display: block; margin-bottom: 2px; font-weight: bold;}
@@ -84,7 +85,7 @@
             opacity: 0; font-weight: 900; font-style: italic; pointer-events: none; text-shadow: 0 0 10px orange; transition: transform 0.1s; z-index: 5;
         }
 
-        /* 结算页优化 */
+        /* 结算页 */
         #start-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10,10,10,0.96);
             backdrop-filter: blur(8px); display: flex; flex-direction: column; justify-content: center; align-items: center;
@@ -108,27 +109,37 @@
         .blink { animation: blinker 1s step-end infinite; }
         @keyframes blinker { 50% { opacity: 0; } }
         .fever-border { border-color: #ff00ff !important; box-shadow: 0 0 60px rgba(255, 0, 255, 0.5) !important; }
+        
+        /* AI演示标记 */
+        #demo-tag {
+            position: absolute; bottom: 10px; right: 10px; color: #00ffff; font-weight: bold; 
+            font-size: 12px; animation: pulse 2s infinite; text-shadow: 0 0 5px #00ffff; z-index: 50;
+            background: rgba(0,0,0,0.6); padding: 4px 8px; border-radius: 4px; border: 1px solid rgba(0,255,255,0.3);
+        }
+        @keyframes pulse { 0%{opacity:0.6;} 50%{opacity:1;} 100%{opacity:0.6;} }
     </style>
 </head>
 <body>
-    <div id="game-container">
-        <canvas id="gameCanvas" width="800" height="500"></canvas>
-        <div id="ui-layer">
-            <div style="display:flex; gap:15px;">
-                <div class="stat-box"><span class="stat-label">🏆 BEST</span><span id="globalBest" class="stat-value">0</span></div>
+    <div id="app-root">
+        <div id="game-container">
+            <canvas id="gameCanvas" width="800" height="500"></canvas>
+            <div id="ui-layer">
+                <div style="display:flex; gap:15px;">
+                    <div class="stat-box"><span class="stat-label">🏆 BEST</span><span id="globalBest" class="stat-value">0</span></div>
+                </div>
+                <div class="stat-box"><span id="scoreDisplay">0</span><div id="hpDisplay">❤️❤️❤️</div></div>
+                <div class="stat-box"><span class="stat-label">📊 RANK</span><span id="currentRank" class="stat-value">-</span></div>
             </div>
-            <div class="stat-box"><span id="scoreDisplay">0</span><div id="hpDisplay">❤️❤️❤️</div></div>
-            <div class="stat-box"><span class="stat-label">📊 RANK</span><span id="currentRank" class="stat-value">-</span></div>
-        </div>
-        <div id="energy-bar-container"><div id="energy-bar"></div></div>
-        <div id="combo-display">COMBO x0</div>
-        <div id="start-screen"></div>
-    </div>
+            <div id="energy-bar-container"><div id="energy-bar"></div></div>
+            <div id="combo-display">COMBO x0</div>
+            <div id="start-screen"></div>
+            </div>
 
-    <div id="controls-area">
-        <button id="smash-btn" onmousedown="btnPress(event)" onmouseup="btnRelease(event)" ontouchstart="btnPress(event)" ontouchend="btnRelease(event)">
-            <span style="font-size: 28px;">⚡</span> SMASH
-        </button>
+        <div id="controls-area">
+            <button id="smash-btn" onmousedown="btnPress(event)" onmouseup="btnRelease(event)" ontouchstart="btnPress(event)" ontouchend="btnRelease(event)">
+                <span style="font-size: 28px;">⚡</span> 粉碎
+            </button>
+        </div>
     </div>
     
     <script>
@@ -186,7 +197,7 @@
             },
             updateUI() { document.getElementById('globalBest').innerText = Math.max(this.globalScores[0]||0, this.personalBest); },
             getRankData(score) {
-                if (score < 800) return { title: "🐟 摸鱼艺术家", comment: "HR: 键盘上的灰尘都比你动得快。" };
+                if (score < 800) return { title: "🐟 摸鱼艺术家", comment: "HR: 键盘上的最大都比你动得快。" };
                 if (score < 2500) return { title: "☕ 饮水机守护神", comment: "HR: 只要我不努力，老板就过不上好日子。" };
                 if (score < 5500) return { title: "🔨 合格工具人", comment: "HR: 你的努力，老板看在眼里（大概）。" };
                 if (score < 10000) return { title: "💇‍♂️ 秃头预备役", comment: "HR: 变强了，也变秃了。值得吗？" };
@@ -288,7 +299,7 @@
             const screen = document.getElementById('start-screen'); screen.style.display = 'flex';
             screen.innerHTML = `
                 <div class="title">职场粉碎机</div>
-                <div style="color:#00ffff; font-size:14px; letter-spacing:2px; margin-bottom:10px;">v1.7 内测稳定版</div>
+                <div style="color:#00ffff; font-size:14px; letter-spacing:2px; margin-bottom:10px;">v1.9 霸屏修复版</div>
                 <div class="tutorial-box">
                     <p>🟣 精英怪: 坚硬, 连按 <span class="key-highlight">3次</span></p>
                     <p>⚡ 能量条: 满条进入 <span style="color:#ff00ff"><b>暴走</b></span></p>
